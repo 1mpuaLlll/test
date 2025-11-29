@@ -4,6 +4,7 @@ import { Welcome } from './pages/Welcome';
 import { Chats } from './pages/Chats';
 import { ChatView } from './pages/ChatView';
 import { Profile } from './pages/Profile';
+import { NFTGeneratorPage } from './pages/NFTGenerator';
 import { useAuthStore } from './store/authStore';
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
           path="/profile"
           element={isAuthenticated ? <Profile /> : <Navigate to="/" />}
         />
+        <Route path="/nft-generator" element={<NFTGeneratorPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>

@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Avatar, Badge, Button, Card } from '../components/common';
+import { NFTGallery } from '../components/nft';
 
 const Container = styled.div`
   height: 100vh;
@@ -439,36 +440,6 @@ const Feature = styled.li`
 export const Profile = () => {
   const [activeTab, setActiveTab] = useState('nfts');
 
-  const mockNFTs = [
-    {
-      id: '1',
-      name: 'Cosmic Ape #111',
-      collection: 'Cosmic Collection',
-      rarity: 'legendary',
-      price: 2.5,
-      usdPrice: 4250,
-      image: 'linear-gradient(135deg, #FFD700 0%, #F59E0B 100%)',
-    },
-    {
-      id: '2',
-      name: 'Cyber Punk #456',
-      collection: 'Future Punks',
-      rarity: 'epic',
-      price: 1.8,
-      usdPrice: 3060,
-      image: 'linear-gradient(135deg, #9333EA 0%, #A855F7 100%)',
-    },
-    {
-      id: '3',
-      name: 'Digital Dream #789',
-      collection: 'Dream Series',
-      rarity: 'rare',
-      price: 0.9,
-      usdPrice: 1530,
-      image: 'linear-gradient(135deg, #00F5FF 0%, #3B82F6 100%)',
-    },
-  ];
-
   return (
     <Container>
       <Header>
@@ -544,45 +515,10 @@ export const Profile = () => {
         </Tabs>
 
         {activeTab === 'nfts' && (
-          <NFTGrid>
-            {mockNFTs.map((nft, index) => (
-              <NFTCard
-                key={nft.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -8 }}
-              >
-                <NFTImage $bg={nft.image}>
-                  <NFTRarityBadge $rarity={nft.rarity}>{nft.rarity}</NFTRarityBadge>
-                </NFTImage>
-                <NFTInfo>
-                  <NFTName>{nft.name}</NFTName>
-                  <NFTCollection>{nft.collection}</NFTCollection>
-                  <NFTFooter>
-                    <NFTPrice>
-                      <NFTEth>{nft.price} ETH</NFTEth>
-                      <NFTUsd>${nft.usdPrice}</NFTUsd>
-                    </NFTPrice>
-                    <NFTActions>
-                      <NFTActionButton
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <Heart size={16} />
-                      </NFTActionButton>
-                      <NFTActionButton
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                      >
-                        <Share2 size={16} />
-                      </NFTActionButton>
-                    </NFTActions>
-                  </NFTFooter>
-                </NFTInfo>
-              </NFTCard>
-            ))}
-          </NFTGrid>
+          <NFTGallery
+            tokenIds={[111, 456, 789, 234, 567, 890, 123, 345, 678, 321, 654, 987]}
+            columns={3}
+          />
         )}
 
         {activeTab === 'subscription' && (
