@@ -1,5 +1,14 @@
-import { BrowserProvider, Contract } from 'ethers';
+import { BrowserProvider, Contract, parseEther, formatEther } from 'ethers';
 import { WalletConnection } from '../types';
+
+// Адрес кошелька продавца (можно изменить на свой)
+const SELLER_WALLET = '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb';
+
+interface PurchaseResult {
+  success: boolean;
+  transactionHash?: string;
+  error?: string;
+}
 
 class Web3Service {
   private provider: BrowserProvider | null = null;
@@ -87,7 +96,118 @@ class Web3Service {
     }
 
     const balance = await this.provider.getBalance(address);
-    return balance.toString();
+    return formatEther(balance);
+  }
+
+  async getBalanceInEth(): Promise<string> {
+    if (!this.signer) {
+      throw new Error('Wallet not connected');
+    }
+
+    const address = await this.signer.getAddress();
+    const balance = await this.provider!.getBalance(address);
+    return formatEther(balance);
+  }
+
+  async purchaseNFT(
+    tokenId: number,
+    priceInEth: number,
+    sellerAddress?: string
+  ): Promise<PurchaseResult> {
+    try {
+      if (!this.signer) {
+        throw new Error('Wallet not connected');
+      }
+
+      const recipient = sellerAddress || SELLER_WALLET;
+      const value = parseEther(priceInEth.toString());
+
+      // Отправка ETH продавцу
+      const tx = await this.signer.sendTransaction({
+        to: recipient,
+        value: value,
+      });
+
+      // Ждем подтверждения транзакции
+      const receipt = await tx.wait();
+
+      console.log('Purchase successful!', {
+        tokenId,
+        transactionHash: receipt.hash,
+        from: await this.signer.getAddress(),
+        to: recipient,
+        value: formatEther(value),
+      });
+
+      return {
+        success: true,
+        transactionHash: receipt.hash,
+      };
+    } catch (error: any) {
+      console.error('Error purchasing NFT:', error);
+
+      let errorMessage = 'Unknown error occurred';
+      if (error.code === 'ACTION_REJECTED') {
+        errorMessage = 'Transaction rejected by user';
+      } else if (error.code === 'INSUFFICIENT_FUNDS') {
+        errorMessage = 'Insufficient funds';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    }
+  }
+
+  async batchPurchaseNFTs(
+    purchases: Array<{ tokenId: number; priceInEth: number }>,
+    sellerAddress?: string
+  ): Promise<PurchaseResult[]> {
+    const results: PurchaseResult[] = [];
+
+    for (const purchase of purchases) {
+      const result = await this.purchaseNFT(
+        purchase.tokenId,
+        purchase.priceInEth,
+        sellerAddress
+      );
+      results.push(result);
+
+      // Задержка между транзакциями
+      if (results.length < purchases.length) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
+
+    return results;
+  }
+
+  async estimateGasCost(priceInEth: number): Promise<string> {
+    if (!this.signer || !this.provider) {
+      throw new Error('Wallet not connected');
+    }
+
+    try {
+      const gasPrice = (await this.provider.getFeeData()).gasPrice;
+      const gasLimit = 21000n; // Standard ETH transfer
+
+      if (!gasPrice) {
+        return '0.001'; // Fallback estimate
+      }
+
+      const gasCost = gasPrice * gasLimit;
+      return formatEther(gasCost);
+    } catch (error) {
+      console.error('Error estimating gas:', error);
+      return '0.001';
+    }
+  }
+
+  getCurrentWalletAddress(): string | null {
+    return this.signer ? this.signer.address : null;
   }
 
   onAccountChange(callback: (accounts: string[]) => void): void {
